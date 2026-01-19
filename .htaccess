@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Skip existing files and directories (CSS, JS, images, etc.)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Route ALL other requests to index.php, preserving original path and query string
+RewriteRule ^(.*)$ index.php [L,QSA]
+</IfModule>
