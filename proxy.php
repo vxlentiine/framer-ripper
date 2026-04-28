@@ -96,8 +96,14 @@ if (!empty($gaId)) {
     $html = str_replace('</head>', $gaSnippet . '</head>', $html);
 }
 
-// Remove Framer badge and HTML comments
+// Remove Framer badge (container div + hidden scaled paragraph with promotional text)
 $html = preg_replace('#<div\s+id="__framer-badge-container"[^>]*>.*?</div>#si', '', $html);
+$html = preg_replace('#<p\s[^>]*transform:\s*scale\(0\.001\)[^>]*>.*?</p>#si', '', $html);
+
+// Remove generator meta (reveals Framer platform and commit hash)
+$html = preg_replace('/<meta\s+name=["\']generator["\'][^>]*>/i', '', $html);
+
+// Remove HTML comments
 $html = preg_replace('/<!--(.|\s)*?-->/', '', $html);
 
 if (!$devMode) {
