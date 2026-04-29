@@ -9,17 +9,30 @@ if (!$devMode && file_exists($cacheFile)) {
     exit;
 }
 
-function fetchHtml(string $url): ?string
+function fetchPage(string $url): ?array
 {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 15);
     curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; SitemapCrawler/1.0)');
-    $html = curl_exec($ch);
-    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    $response   = curl_exec($ch);
+    $code       = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
     curl_close($ch);
-    return ($html !== false && $code < 400) ? $html : null;
+
+    if ($response === false || $code >= 400) return null;
+
+    $headers = substr($response, 0, $headerSize);
+    $html    = substr($response, $headerSize);
+
+    $lastmod = null;
+    if (preg_match('/Last-Modified:\s*(.+)/i', $headers, $m)) {
+        $lastmod = date('Y-m-d', strtotime(trim($m[1])));
+    }
+
+    return ['html' => $html, 'lastmod' => $lastmod];
 }
 
 function extractLinks(string $html, string $framerHost, string $framerUrl): array
@@ -60,12 +73,12 @@ while (!empty($queue) && count($pages) < $limit) {
     if (isset($visited[$path])) continue;
     $visited[$path] = true;
 
-    $html = fetchHtml($framerUrl . $path);
-    if ($html === null) continue;
+    $page = fetchPage($framerUrl . $path);
+    if ($page === null) continue;
 
-    $pages[] = $path;
+    $pages[$path] = $page['lastmod'];
 
-    foreach (extractLinks($html, $framerHost, $framerUrl) as $link) {
+    foreach (extractLinks($page['html'], $framerHost, $framerUrl) as $link) {
         if (!isset($visited[$link])) {
             $queue[] = $link;
         }
@@ -75,9 +88,14 @@ while (!empty($queue) && count($pages) < $limit) {
 // Build sitemap XML
 $xml  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
-foreach ($pages as $path) {
-    $loc = rtrim($myDomain, '/') . $path;
-    $xml .= '  <url><loc>' . htmlspecialchars($loc, ENT_XML1) . '</loc></url>' . "\n";
+foreach ($pages as $path => $lastmod) {
+    $loc      = rtrim($myDomain, '/') . $path;
+    $priority = ($path === '/') ? '1.0' : '0.8';
+    $xml .= '  <url>' . "\n";
+    $xml .= '    <loc>' . htmlspecialchars($loc, ENT_XML1) . '</loc>' . "\n";
+    if ($lastmod) $xml .= '    <lastmod>' . $lastmod . '</lastmod>' . "\n";
+    $xml .= '    <priority>' . $priority . '</priority>' . "\n";
+    $xml .= '  </url>' . "\n";
 }
 $xml .= '</urlset>';
 
