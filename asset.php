@@ -31,6 +31,8 @@ curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 if (!empty($_SERVER['HTTP_USER_AGENT'])) {
     curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);
 }
+// Framer's CDN uses content negotiation (Vary: Accept) — always request AVIF/WebP so the cache stores the smallest format
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Accept: image/avif,image/webp,image/*,*/*;q=0.8']);
 $body = curl_exec($ch);
 $type = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
 $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
