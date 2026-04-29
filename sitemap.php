@@ -38,8 +38,10 @@ function extractLinks(string $html, string $framerHost, string $framerUrl): arra
         $parsed = parse_url($href);
         if (empty($parsed['host']) || $parsed['host'] !== $framerHost) continue;
 
-        // Normalise: path only, no query string, no fragment, no trailing slash
-        $path = rtrim($parsed['path'] ?? '/', '/') ?: '/';
+        // Normalise: path only, no query string, no fragment, no ./ segments, no trailing slash
+        $path = $parsed['path'] ?? '/';
+        $path = preg_replace('#/\.(/|$)#', '/', $path); // collapse /./
+        $path = rtrim($path, '/') ?: '/';
         $links[] = $path;
     }
 
