@@ -41,6 +41,12 @@ if ($body === false || $code >= 400) {
 if (preg_match('#(javascript|css|json|text/)#i', $type)) {
     $body = str_replace('https://framerusercontent.com', '/assets', $body);
     $body = str_replace('https://app.framerstatic.com', '/static', $body);
+    // Stub out Framer's editor bar import — it pulls app.framerstatic.com chunks for every visitor
+    $body = str_replace(
+        'import(`https://framer.com/edit/init.mjs`)',
+        'Promise.resolve({createEditorBar:()=>()=>null})',
+        $body
+    );
 }
 
 if (!$devMode) {
