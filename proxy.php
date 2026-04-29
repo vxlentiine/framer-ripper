@@ -131,6 +131,9 @@ $html = preg_replace('#<p\s[^>]*transform:\s*scale\(0\.001\)[^>]*>.*?</p>#si', '
 // Remove generator meta (reveals Framer platform and commit hash)
 $html = preg_replace('/<meta\s+name=["\']generator["\'][^>]*>/i', '', $html);
 
+// Remove Framer analytics script (loads app.framerstatic.com chunks, leaks Framer fingerprint)
+$html = preg_replace('/<script\s[^>]*src=["\']https:\/\/events\.framer\.com[^"\']*["\'][^>]*><\/script>/i', '', $html);
+
 // Remove HTML comments
 $html = preg_replace('/<!--(.|\s)*?-->/', '', $html);
 
