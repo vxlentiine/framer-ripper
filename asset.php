@@ -34,6 +34,12 @@ if ($body === false || $code >= 400) {
     exit;
 }
 
+// Rewrite framerusercontent.com references inside text-based assets (JS, CSS, JSON)
+// so that dynamically rendered content also routes through our asset proxy
+if (preg_match('#(javascript|css|json|text/)#i', $type)) {
+    $body = str_replace('https://framerusercontent.com', '/assets', $body);
+}
+
 if (!$devMode) {
     @mkdir($cacheDir, 0755, true);
     file_put_contents($cacheFile, $body);
