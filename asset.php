@@ -1,8 +1,8 @@
 <?php
 require __DIR__ . '/config.php';
 
-$prefix     = strpos($_SERVER['REQUEST_URI'], '/fstatic') === 0 ? '/fstatic' : '/assets';
-$targetHost = ($prefix === '/fstatic') ? 'app.framerstatic.com' : 'framerusercontent.com';
+$prefix     = strpos($_SERVER['REQUEST_URI'], '/static') === 0 ? '/static' : '/assets';
+$targetHost = ($prefix === '/static') ? 'app.framerstatic.com' : 'framerusercontent.com';
 $assetPath  = preg_replace('#^' . $prefix . '#', '', $_SERVER['REQUEST_URI']);
 
 $cacheDir  = __DIR__ . '/cache/assets';
@@ -40,7 +40,7 @@ if ($body === false || $code >= 400) {
 // so that dynamically rendered content also routes through our asset proxy
 if (preg_match('#(javascript|css|json|text/)#i', $type)) {
     $body = str_replace('https://framerusercontent.com', '/assets', $body);
-    $body = str_replace('https://app.framerstatic.com', '/fstatic', $body);
+    $body = str_replace('https://app.framerstatic.com', '/static', $body);
 }
 
 if (!$devMode) {
