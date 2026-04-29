@@ -1,6 +1,11 @@
 <?php
 require __DIR__ . '/config.php';
 
+if(empty($_SERVER['REQUEST_URI']) || $_SERVER['REQUEST_URI'] === '/') {
+	header('HTTP/1.1 404 Not Found');
+	exit;
+}
+
 $prefix     = strpos($_SERVER['REQUEST_URI'], '/static') === 0 ? '/static' : '/assets';
 $targetHost = ($prefix === '/static') ? 'app.framerstatic.com' : 'framerusercontent.com';
 $assetPath  = preg_replace('#^' . $prefix . '#', '', $_SERVER['REQUEST_URI']);
@@ -31,10 +36,11 @@ $type = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
 $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
-if ($body === false || $code >= 400) {
-    header('HTTP/1.1 502 Bad Gateway');
+if ($body === false || ($code >= 404 && $code < 500)) {
+    header('HTTP/1.1 404 Not Found');
     exit;
 }
+
 
 // Rewrite Framer CDN references inside text-based assets (JS, CSS, JSON)
 // so that dynamically rendered content also routes through our asset proxy
