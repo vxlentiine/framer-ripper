@@ -61,8 +61,32 @@ if (stripos($html, '<base') === false) {
     $html = preg_replace('/<head([^>]*)>/i', '<head$1>' . $baseTag, $html, 1);
 }
 
+// Robots meta guard: MutationObserver that reverts any JS-injected noindex
+$robotsGuard = '<script>(function(){'
+    . 'function enforce(){'
+    .   'document.querySelectorAll(\'meta[name="robots"]\').forEach(function(m){'
+    .     'if(m.getAttribute(\'content\')!==\'index, follow\')'
+    .       'm.setAttribute(\'content\',\'index, follow\');'
+    .   '});'
+    . '}'
+    . 'new MutationObserver(function(mutations){'
+    .   'var hit=mutations.some(function(m){'
+    .     'if(m.type===\'childList\')'
+    .       'return Array.from(m.addedNodes).some(function(n){'
+    .         'return n.nodeName===\'META\'&&n.getAttribute&&n.getAttribute(\'name\')===\'robots\';'
+    .       '});'
+    .     'if(m.type===\'attributes\')'
+    .       'return m.target.nodeName===\'META\'&&m.target.getAttribute(\'name\')===\'robots\';'
+    .     'return false;'
+    .   '});'
+    .   'if(hit)enforce();'
+    . '}).observe(document.documentElement,{'
+    .   'childList:true,subtree:true,attributes:true,attributeFilter:[\'content\',\'name\']'
+    . '});'
+    . '})();</script>';
+
 // Override Framer's internal site URL so the router uses our domain
-$inject = '<script>window.__FRAMER_SITE_URL__="' . $origin . '";</script>';
+$inject = '<script>window.__FRAMER_SITE_URL__="' . $origin . '";</script>' . $robotsGuard;
 $html = preg_replace('/<head([^>]*)>/i', '<head$1>' . $inject, $html, 1);
 
 // Fix robots meta: Framer sets noindex which would block all crawlers
