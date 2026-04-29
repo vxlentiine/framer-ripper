@@ -113,6 +113,9 @@ $html = preg_replace(
 // Strip remaining Framer domain references (makes hrefs relative; base tag resolves them to our domain)
 $html = str_replace($framerUrl, '', $html);
 
+// Rewrite framerusercontent.com asset URLs through our local asset proxy/cache
+$html = str_replace('https://framerusercontent.com', '/assets', $html);
+
 // Inject GA4 snippet before </head> when configured
 if (!empty($gaId)) {
     $gaSnippet = '<script async src="https://www.googletagmanager.com/gtag/js?id=' . $gaId . '"></script>'
