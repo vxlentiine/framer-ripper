@@ -85,8 +85,20 @@ $robotsGuard = '<script>(function(){'
     . '});'
     . '})();</script>';
 
+$hydrateSuppress = '<script>(function(){'
+    . 'var ce=console.error;'
+    . 'console.error=function(){'
+    .   'var m=Array.prototype.join.call(arguments," ");'
+    .   'if(m.indexOf("Minified React error")!==-1||m.indexOf("hydrateRoot")!==-1)return;'
+    .   'ce.apply(console,arguments);'
+    . '};'
+    . 'window.addEventListener("error",function(e){'
+    .   'if(e.message&&e.message.indexOf("Minified React error")!==-1)e.preventDefault();'
+    . '});'
+    . '})();</script>';
+
 // Override Framer's internal site URL so the router uses our domain
-$inject = '<script>window.__FRAMER_SITE_URL__="' . $origin . '";</script>' . $robotsGuard;
+$inject = '<script>window.__FRAMER_SITE_URL__="' . $origin . '";</script>' . $robotsGuard . $hydrateSuppress;
 $html = preg_replace('/<head([^>]*)>/i', '<head$1>' . $inject, $html, 1);
 
 // Fix robots meta: Framer sets noindex which would block all crawlers
