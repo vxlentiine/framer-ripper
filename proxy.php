@@ -134,8 +134,8 @@ $html = preg_replace('/<meta\s+name=["\']generator["\'][^>]*>/i', '', $html);
 // Remove Framer analytics script (loads app.framerstatic.com chunks, leaks Framer fingerprint)
 $html = preg_replace('/<script\s[^>]*src=["\']https:\/\/events\.framer\.com[^"\']*["\'][^>]*><\/script>/i', '', $html);
 
-// Remove HTML comments
-$html = preg_replace('/<!--(.|\s)*?-->/', '', $html);
+// Remove HTML comments but preserve React 18 hydration markers (<!--$-->, <!--/$-->, etc.)
+$html = preg_replace('/<!--(?!\$|\$\?|\$!|\/\$)[\s\S]*?-->/', '', $html);
 
 if (!$devMode) {
     @mkdir(__DIR__ . '/cache', 0755, true);
